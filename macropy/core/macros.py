@@ -166,8 +166,15 @@ def expand_entire_ast(tree, src, bindings):
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 
-            if isinstance(tree, Subscript) and type(tree.slice) is Index:
+            # AMK Hackery
+            if isinstance(tree, Call):
+                new_tree = expand_if_in_registry(tree.func, tree, [], expr_registry)
 
+                if new_tree:
+                    assert isinstance(new_tree, expr), type(new_tree)
+                    return macro_expand(new_tree)
+
+            if isinstance(tree, Subscript) and type(tree.slice) is Index:
                 new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
 
                 if new_tree:
@@ -288,4 +295,7 @@ def check_annotated(tree):
                     type(tree.slice) is Index and \
                     type(tree.value) is Name:
         return tree.value.id, tree.slice.value
+
+
+# import other modules in order to register their hooks
 
